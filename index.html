@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주식회사 설립등기 사전설문</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght=300;400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+        .step-content {
+            display: none;
+        }
+        .step-content.active {
+            display: block;
+        }
+        .custom-option:checked + label {
+            border-color: #1e3a8a;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-scale-balanced text-blue-900 text-2xl"></i>
+                <span class="font-bold text-lg text-slate-800">라온 행정사 법무사 사무소</span>
+            </div>
+            <div class="text-sm font-medium text-slate-500">
+                <span id="current-step-badge" class="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-sm font-semibold cursor-pointer hover:bg-blue-200" title="단계 선택 이동">1</span> / <span id="total-steps-badge">6</span> 단계
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-1">
+        
+        <div id="progress-container" class="w-full bg-slate-200 h-3 rounded-full mb-8 overflow-hidden cursor-pointer relative" title="클릭하여 해당 단계로 바로 이동">
+            <div id="progress-bar" class="bg-blue-900 h-full transition-all duration-300" style="width: 16.66%;"></div>
+        </div>
+
+        <div class="flex justify-center space-x-2 mb-6">
+            <button type="button" onclick="goToStep(1)" class="step-nav-btn w-8 h-8 rounded-full bg-blue-900 text-white font-bold text-xs transition-colors">1</button>
+            <button type="button" onclick="goToStep(2)" class="step-nav-btn w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold text-xs transition-colors">2</button>
+            <button type="button" onclick="goToStep(3)" class="step-nav-btn w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold text-xs transition-colors">3</button>
+            <button type="button" onclick="goToStep(4)" class="step-nav-btn w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold text-xs transition-colors">4</button>
+            <button type="button" onclick="goToStep(5)" class="step-nav-btn w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold text-xs transition-colors">5</button>
+            <button type="button" onclick="goToStep(6)" class="step-nav-btn w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold text-xs transition-colors">6</button>
+        </div>
+
+        <!-- 설문 내용을 엑셀(.xlsx) + 텍스트(.txt) 파일로 만들어 laon7049@naver.com 으로 첨부 발송 -->
+        <form id="surveyForm" action="https://formspree.io/f/xvvyzkrr" method="POST" novalidate class="bg-white rounded-2xl shadow-md border border-slate-100 p-6 md:p-10 transition-all">
+            
+            <div id="step-1" class="step-content active space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Step 1. 의뢰인 기본 정보</h2>
+                    <p class="text-slate-500 text-sm">설립등기 진행 과정을 안내받으실 연락처 정보를 입력해주세요.</p>
+                </div>
+                <hr class="border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">신청인 성함 <span class="text-red-500">*</span></label>
+                        <input type="text" name="신청인 성함" id="applicant_name" required class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="홍길동">
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">연락처 <span class="text-red-500">*</span></label>
+                        <input type="tel" name="연락처" id="applicant_phone" required class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="010-0000-0000">
+                    </div>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <label class="text-sm font-semibold text-slate-700">이메일 주소 <span class="text-red-500">*</span></label>
+                    <input type="email" name="_replyto" id="applicant_email" required class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="example@email.com">
+                </div>
+            </div>
+
+            <div id="step-2" class="step-content space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Step 2. 회사 상호 결정</h2>
+                    <p class="text-slate-500 text-sm">원하시는 주식회사의 상호를 입력해주세요. 동일 관할 내에 중복된 상호는 사용이 불가능할 수 있습니다.</p>
+                </div>
+                <hr class="border-slate-100">
+                <div class="space-y-4">
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">상호 표기 방식 <span class="text-red-500">*</span></label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <input type="radio" id="corp_pos_prev" name="상호 표기 방식" value="주식회사 (앞)" checked class="hidden custom-option">
+                                <label for="corp_pos_prev" class="block text-center border border-slate-300 rounded-lg p-4 cursor-pointer font-medium hover:border-slate-400">주식회사 ○○ (앞)</label>
+                            </div>
+                            <div>
+                                <input type="radio" id="corp_pos_next" name="상호 표기 방식" value="(뒤) 주식회사" class="hidden custom-option">
+                                <label for="corp_pos_next" class="block text-center border border-slate-300 rounded-lg p-4 cursor-pointer font-medium hover:border-slate-400">○○ 주식회사 (뒤)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">한글 상호 <span class="text-red-500">*</span></label>
+                        <input type="text" name="한글 상호" id="company_name_ko" required class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="예: 라온">
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">영문 상호 (선택)</label>
+                        <input type="text" name="영문 상호" id="company_name_en" class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="예: RAON Co., Ltd.">
+                        <span class="text-xs text-slate-400">※ 영문 상호는 한글 상호의 발음대로 표기하거나 의미를 담아 표기하며, 끝에 Co., Ltd. 또는 Inc. 등이 붙습니다.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-3" class="step-content space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Step 3. 본점 소재지(주소)</h2>
+                    <p class="text-slate-500 text-sm">회사의 주된 사무소가 위치할 주소를 입력해 주세요.</p>
+                </div>
+                <hr class="border-slate-100">
+                <div class="space-y-4">
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">본점 주소 <span class="text-red-500">*</span></label>
+                        <input type="text" name="본점 주소" id="office_address" required class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="반드시 도로명 주소 입력">
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">상세 주소 (선택)</label>
+                        <input type="text" name="상세 주소" id="office_address_detail" class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="예: 101동 502호 (호수가 명확한 경우)">
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 flex space-x-3">
+                        <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
+                        <span class="text-xs text-amber-800 leading-relaxed">
+                            <strong>주의사항:</strong> 설립등기 단계에서는 임대차계약서가 필수사항은 아니지만, 등기 완료 후 사업자등록을 신청할 때는 <strong>'법인 명의'로 체결된 임대차계약서</strong>가 필요하므로 주소를 정확히 기재해 주셔야 합니다.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-4" class="step-content space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Step 4. 자본금 및 주식 구성</h2>
+                    <p class="text-slate-500 text-sm">회사의 총 자본금과 1주의 금액을 설정합니다. 금액을 입력하면 발행주식 총수가 자동으로 계산됩니다.</p>
+                </div>
+                <hr class="border-slate-100">
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex flex-col space-y-2">
+                            <label class="text-sm font-semibold text-slate-700">1주의 액면가액 <span class="text-red-500">*</span></label>
+                            <select id="share_value" name="1주의 액면가액" class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900 bg-white">
+                                <option value="100">100원</option>
+                                <option value="500">500원</option>
+                                <option value="1000" selected>1,000원</option>
+                                <option value="5000">5,000원</option>
+                                <option value="10000">10,000원</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col space-y-2">
+                            <label class="text-sm font-semibold text-slate-700">총 자본금 (원) <span class="text-red-500">*</span></label>
+                            <div class="relative flex items-center">
+                                <input type="number" id="capital_amount" name="총 자본금" required min="100" class="w-full border border-slate-300 rounded-lg p-3 pr-10 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900" placeholder="예: 10000000">
+                                <span class="absolute right-3 text-slate-400 font-medium text-sm">원</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 flex justify-between items-center">
+                        <span class="text-sm font-semibold text-slate-700">설립 시 발행할 주식의 총수:</span>
+                        <span class="text-lg font-bold text-blue-900"><span id="total_shares_display">0</span> 주</span>
+                    </div>
+                </div>
+                <input type="hidden" id="total_shares" name="발행할 주식의 총수" value="0">
+            </div>
+
+            <div id="step-5" class="step-content space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Step 5. 임원 및 주주 구성</h2>
+                    <p class="text-slate-500 text-sm">법인의 임원(이사/감사)과 주식 지분을 가질 주주를 구성합니다.</p>
+                </div>
+                <hr class="border-slate-100">
+                
+                <div class="space-y-4">
+                    <label class="text-sm font-semibold text-slate-700 block">구성 형태 선택 <span class="text-red-500">*</span></label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <input type="radio" id="exec_type_1" name="임원 구성 형태" value="1인 주주 겸 대표이사 + 지분없는 이사/감사 1인" checked class="hidden custom-option">
+                            <label for="exec_type_1" class="block border border-slate-300 rounded-lg p-4 cursor-pointer hover:border-slate-400 h-full">
+                                <span class="block font-bold text-slate-800 mb-1 text-sm">가장 일반적인 구성 (추천)</span>
+                                <span class="block text-xs text-slate-500 leading-normal">대표이사 1인이 지분 100%를 소유하고, 지분이 없는 가족이나 지인 1인을 이사 또는 감사로 등재</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" id="exec_type_2" name="임원 구성 형태" value="지분 없는 대표이사 1인 + 지분 있는 주주 1인" class="hidden custom-option">
+                            <label for="exec_type_2" class="block border border-slate-300 rounded-lg p-4 cursor-pointer hover:border-slate-400 h-full">
+                                <span class="block font-bold text-slate-800 mb-1 text-sm">2인 별도 구성</span>
+                                <span class="block text-xs text-slate-500 leading-normal">대표이사는 주식을 전혀 갖지 않고 경영만 하며, 투자자(주주)가 별도로 존재</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col space-y-2 pt-2">
+                        <label class="text-sm font-semibold text-slate-700">임원 및 주주 명부 상세 기록 <span class="text-red-500">*</span></label>
+                        <textarea name="임원 및 주주 상세 명부" id="executive_shareholder_list" required rows="4" class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900 text-sm" placeholder="예시)&#10;1. 홍길동 (대표이사, 지분 100%)&#10;2. 김철수 (감사, 지분 없음)"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-6" class="step-content space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 mb-2">Step 6. 사업의 목적 및 제출</h2>
+                    <p class="text-slate-500 text-sm">마지막 단계입니다. 작성을 마치고 아래 버튼을 누르시면 엑셀·텍스트 파일이 만들어져 관리자 메일로 발송됩니다.</p>
+                </div>
+                <hr class="border-slate-100">
+                <div class="space-y-4">
+                    <div class="flex flex-col space-y-2">
+                        <label class="text-sm font-semibold text-slate-700">사업 목적 리스트 <span class="text-red-500">*</span></label>
+                        <textarea name="사업 목적 리스트" id="business_purposes" required rows="6" class="border border-slate-300 rounded-lg p-3 outline-hidden focus:border-blue-900 focus:ring-1 focus:ring-blue-900 text-sm" placeholder="예시)&#10;1. 소프트웨어 개발 및 공급업&#10;2. 전자상거래 및 통신판매업"></textarea>
+                    </div>
+
+                    <div class="p-4 bg-blue-900 text-white rounded-xl space-y-2 mt-6">
+                        <h4 class="font-bold text-sm"><i class="fa-solid fa-envelope mr-1"></i> 작성이 완료되었습니다!</h4>
+                        <p class="text-xs text-blue-100 leading-normal">전송 버튼을 누르면 입력하신 내용이 <strong>엑셀(.xlsx)</strong>과 <strong>텍스트(.txt)</strong> 파일로 만들어져 <strong>laon7049@naver.com</strong> 으로 첨부 발송됩니다.</p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button type="button" id="previewBtn" class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 cursor-pointer">
+                            <i class="fa-regular fa-eye mr-1.5"></i> 작성 내용 미리보기
+                        </button>
+                        <button type="button" id="downloadBtn" class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 text-slate-600 text-sm font-medium hover:bg-slate-50 cursor-pointer">
+                            <i class="fa-solid fa-download mr-1.5"></i> 엑셀·텍스트 파일 내려받기
+                        </button>
+                    </div>
+
+                    <div id="previewBox" class="hidden bg-slate-50 border border-slate-200 rounded-lg p-4">
+                        <pre id="previewText" class="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 이메일 발송 제목 커스텀 설정 -->
+            <input type="hidden" name="_subject" value="[설문 접수] 신규 주식회사 설립등기 사전설문지">
+            <!-- 발송 완료 후 이동할 페이지 (같은 페이지) -->
+            <input type="hidden" name="_next" value="">
+
+            <div class="flex justify-between items-center mt-10 pt-4 border-t border-slate-100">
+                <button type="button" id="prevBtn" class="px-5 py-3 rounded-lg border border-slate-300 text-slate-600 font-medium hover:bg-slate-50 disabled:opacity-30 cursor-pointer" disabled>
+                    <i class="fa-solid fa-arrow-left mr-2"></i> 이전
+                </button>
+                
+                <button type="button" id="nextBtn" class="px-6 py-3 rounded-lg bg-blue-900 text-white font-medium hover:bg-blue-950 cursor-pointer">
+                    다음 <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+
+                <!-- 최종 즉시 메일 전송 버튼 -->
+                <button type="submit" id="submitBtn" class="hidden px-6 py-3 rounded-lg bg-emerald-600 text-white font-bold hover:bg-emerald-700 cursor-pointer shadow-sm">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> 엑셀·텍스트 파일 메일로 전송하기
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 mt-12 text-center">
+        <p class="font-semibold text-slate-300">라온 행정사 법무사 사무소</p>
+        <p class="text-slate-600">© 2026 RAON Legal Agency. All rights reserved.</p>
+    </footer>
+
+<script>
+/* =========================================================================
+   [설정] 첨부파일 발송용 Google Apps Script 웹앱 주소
+   - 아래 GAS_ENDPOINT 값을 배포한 웹앱 URL(.../exec)로 교체하세요.
+   - 값이 비어 있거나 전송에 실패하면 자동으로 Formspree 본문 메일로 대체 발송됩니다.
+   ========================================================================= */
+const GAS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwp7XuRHrzjUutQeA_unNx0uvRF18Fftha7qNbaiYetwT7YoZ0jRCYBEzvbBl_nQVvKGw/exec'; // 예: 'https://script.google.com/macros/s/AKfycb.../exec'
+const ADMIN_EMAIL  = 'laon7049@naver.com';
+
+let currentStep = 1;
+const totalSteps = 6;
+
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const submitBtn = document.getElementById('submitBtn');
+const previewBtn = document.getElementById('previewBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const previewBox = document.getElementById('previewBox');
+const previewText = document.getElementById('previewText');
+const progressBar = document.getElementById('progress-bar');
+const progressContainer = document.getElementById('progress-container');
+const currentStepBadge = document.getElementById('current-step-badge');
+const form = document.getElementById('surveyForm');
+const shareValueSelect = document.getElementById('share_value');
+const capitalAmountInput = document.getElementById('capital_amount');
+const totalSharesDisplay = document.getElementById('total_shares_display');
+const totalSharesHidden = document.getElementById('total_shares');
+
+// 주식 수 자동 계산
+function calculateShares() {
+    const shareValue = parseInt(shareValueSelect.value) || 0;
+    const capitalAmount = parseInt(capitalAmountInput.value) || 0;
+    if (shareValue > 0 && capitalAmount > 0) {
+        const calculated = Math.floor(capitalAmount / shareValue);
+        totalSharesDisplay.textContent = calculated.toLocaleString();
+        totalSharesHidden.value = calculated;
+    } else {
+        totalSharesDisplay.textContent = '0';
+        totalSharesHidden.value = '0';
+    }
+}
+shareValueSelect.addEventListener('change', calculateShares);
+capitalAmountInput.addEventListener('input', calculateShares);
+
+/* ============================ 데이터 수집 ============================ */
+const val = id => (document.getElementById(id).value || '').trim();
+const radioVal = name => {
+    const el = document.querySelector(`input[name="${name}"]:checked`);
+    return el ? el.value : '';
+};
+const won = v => {
+    const n = parseInt(v);
+    return isNaN(n) ? '' : n.toLocaleString() + '원';
+};
+
+function fullCompanyName() {
+    const ko = val('company_name_ko');
+    if (!ko) return '';
+    return radioVal('상호 표기 방식') === '(뒤) 주식회사' ? `${ko} 주식회사` : `주식회사 ${ko}`;
+}
+
+function stamp() {
+    const d = new Date();
+    const p = n => String(n).padStart(2, '0');
+    return {
+        pretty: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`,
+        file: `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`
+    };
+}
+
+// 섹션 → 항목 구조로 수집
+function collectSections() {
+    return [
+        { title: '1. 의뢰인 기본 정보', rows: [
+            ['신청인 성함', val('applicant_name')],
+            ['연락처', val('applicant_phone')],
+            ['이메일 주소', val('applicant_email')]
+        ]},
+        { title: '2. 회사 상호', rows: [
+            ['상호 표기 방식', radioVal('상호 표기 방식')],
+            ['한글 상호', val('company_name_ko')],
+            ['최종 상호(조합)', fullCompanyName()],
+            ['영문 상호', val('company_name_en')]
+        ]},
+        { title: '3. 본점 소재지', rows: [
+            ['본점 주소', val('office_address')],
+            ['상세 주소', val('office_address_detail')]
+        ]},
+        { title: '4. 자본금 및 주식 구성', rows: [
+            ['1주의 액면가액', won(val('share_value'))],
+            ['총 자본금', won(val('capital_amount'))],
+            ['발행할 주식의 총수', val('total_shares') ? Number(val('total_shares')).toLocaleString() + '주' : '']
+        ]},
+        { title: '5. 임원 및 주주 구성', rows: [
+            ['임원 구성 형태', radioVal('임원 구성 형태')],
+            ['임원 및 주주 상세 명부', val('executive_shareholder_list')]
+        ]},
+        { title: '6. 사업의 목적', rows: [
+            ['사업 목적 리스트', val('business_purposes')]
+        ]}
+    ];
+}
+
+/* ============================ 텍스트 파일 생성 ============================ */
+function buildText(sections, ts) {
+    const line = '='.repeat(60);
+    let out = [];
+    out.push(line);
+    out.push('  주식회사 설립등기 사전설문지');
+    out.push('  라온 행정사 법무사 사무소');
+    out.push(`  접수일시 : ${ts.pretty}`);
+    out.push(line, '');
+    sections.forEach(sec => {
+        out.push(`■ ${sec.title}`);
+        out.push('-'.repeat(60));
+        sec.rows.forEach(([label, value]) => {
+            const v = value || '(미입력)';
+            if (v.includes('\n')) {
+                out.push(`  · ${label} :`);
+                v.split('\n').forEach(l => out.push(`      ${l}`));
+            } else {
+                out.push(`  · ${label} : ${v}`);
+            }
+        });
+        out.push('');
+    });
+    out.push(line);
+    out.push('  ※ 본 설문지는 홈페이지 사전설문 양식에서 자동 생성되었습니다.');
+    out.push(line);
+    return out.join('\r\n');
+}
+
+/* ============================ 엑셀 파일 생성 ============================ */
+function buildWorkbook(sections, ts) {
+    const aoa = [];
+    aoa.push(['주식회사 설립등기 사전설문지']);
+    aoa.push(['접수일시', ts.pretty]);
+    aoa.push([]);
+    aoa.push(['구분', '항목', '내용']);
+    sections.forEach(sec => {
+        sec.rows.forEach(([label, value], i) => {
+            aoa.push([i === 0 ? sec.title : '', label, value || '']);
+        });
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{ wch: 22 }, { wch: 22 }, { wch: 60 }];
+    // 여러 줄 입력 항목은 셀 자동 줄바꿈
+    Object.keys(ws).forEach(addr => {
+        if (addr[0] === '!') return;
+        const cell = ws[addr];
+        if (typeof cell.v === 'string' && cell.v.includes('\n')) {
+            cell.s = { alignment: { wrapText: true, vertical: 'top' } };
+        }
+    });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '설립등기 사전설문');
+    return wb;
+}
+
+/* ============================ 파일명 / 다운로드 ============================ */
+function fileBase(ts) {
+    const name = val('applicant_name') || '미기재';
+    const corp = val('company_name_ko') || '상호미정';
+    return `설립등기_사전설문_${corp}_${name}_${ts.file}`.replace(/[\\/:*?"<>|]/g, '_');
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function buildFiles() {
+    const ts = stamp();
+    const sections = collectSections();
+    const base = fileBase(ts);
+    const txt = buildText(sections, ts);
+    const wb = buildWorkbook(sections, ts);
+    return {
+        ts, sections, txt,
+        txtName: base + '.txt',
+        xlsxName: base + '.xlsx',
+        xlsxBase64: XLSX.write(wb, { bookType: 'xlsx', type: 'base64' }),
+        xlsxBlob: new Blob([XLSX.write(wb, { bookType: 'xlsx', type: 'array' })],
+            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    };
+}
+
+function saveFilesLocally(files) {
+    // 엑셀 한글 깨짐 방지를 위해 텍스트에 BOM 추가
+    downloadBlob(new Blob(['\uFEFF' + files.txt], { type: 'text/plain;charset=utf-8' }), files.txtName);
+    setTimeout(() => downloadBlob(files.xlsxBlob, files.xlsxName), 400);
+}
+
+downloadBtn.addEventListener('click', () => {
+    saveFilesLocally(buildFiles());
+});
+
+previewBtn.addEventListener('click', () => {
+    const files = buildFiles();
+    previewText.textContent = files.txt;
+    previewBox.classList.toggle('hidden');
+});
+
+/* ============================ 발송 ============================ */
+// 1순위: Google Apps Script (엑셀·텍스트 파일 첨부 발송)
+async function sendWithAttachments(files) {
+    if (!GAS_ENDPOINT) return { ok: false, reason: 'GAS 주소 미설정' };
+    const payload = {
+        to: ADMIN_EMAIL,
+        subject: `[설문 접수] ${fullCompanyName() || '주식회사'} 설립등기 사전설문 - ${val('applicant_name')}`,
+        body: files.txt,
+        replyTo: val('applicant_email'),
+        txtName: files.txtName,
+        txtContent: files.txt,
+        xlsxName: files.xlsxName,
+        xlsxBase64: files.xlsxBase64
+    };
+    try {
+        const res = await fetch(GAS_ENDPOINT, {
+            method: 'POST',
+            // text/plain 으로 보내야 CORS 사전요청(preflight) 없이 전송됩니다.
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        return data.result === 'success'
+            ? { ok: true }
+            : { ok: false, reason: data.message || '메일 서버 오류' };
+    } catch (err) {
+        return { ok: false, reason: err.message };
+    }
+}
+
+// 2순위: Formspree (본문 텍스트 발송 + 파일은 브라우저에 저장)
+async function sendViaFormspree(files) {
+    const data = new FormData(form);
+    if (data.has('_next') && !data.get('_next')) data.delete('_next');
+    data.append('설문 전체내용(텍스트)', files.txt);
+    try {
+        const res = await fetch(form.action, {
+            method: form.method,
+            body: data,
+            headers: { 'Accept': 'application/json' }
+        });
+        if (res.ok) return { ok: true };
+        const err = await res.json();
+        return { ok: false, reason: err.error || '알 수 없는 오류' };
+    } catch (err) {
+        return { ok: false, reason: err.message };
+    }
+}
+
+/* ============================ 단계 이동 / 검증 ============================ */
+window.goToStep = function(step) {
+    if (step >= 1 && step <= totalSteps) {
+        currentStep = step;
+        updateUI();
+    }
+};
+
+currentStepBadge.addEventListener('click', () => {
+    const target = prompt(`이동하려는 단계를 입력하세요 (1 ~ ${totalSteps} 단계):`, currentStep);
+    const parsedTarget = parseInt(target);
+    if (parsedTarget >= 1 && parsedTarget <= totalSteps) window.goToStep(parsedTarget);
+});
+
+progressContainer.addEventListener('click', (e) => {
+    const rect = progressContainer.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    window.goToStep(Math.min(totalSteps, Math.max(1, Math.ceil(percentage * totalSteps))));
+});
+
+function updateUI() {
+    for (let i = 1; i <= totalSteps; i++) {
+        const stepEl = document.getElementById(`step-${i}`);
+        if (stepEl) {
+            if (i === currentStep) stepEl.classList.add('active');
+            else stepEl.classList.remove('active');
+        }
+    }
+
+    progressBar.style.width = `${(currentStep / totalSteps) * 100}%`;
+    currentStepBadge.textContent = currentStep;
+
+    document.querySelectorAll('.step-nav-btn').forEach((btn, index) => {
+        if (index + 1 === currentStep) {
+            btn.classList.remove('bg-slate-200', 'text-slate-600');
+            btn.classList.add('bg-blue-900', 'text-white');
+        } else {
+            btn.classList.remove('bg-blue-900', 'text-white');
+            btn.classList.add('bg-slate-200', 'text-slate-600');
+        }
+    });
+
+    prevBtn.disabled = (currentStep === 1);
+    if (currentStep === totalSteps) {
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+    } else {
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 개별 단계 검증 로직
+function validateStep(step) {
+    const currentStepEl = document.getElementById(`step-${step}`);
+    if (!currentStepEl) return true;
+
+    const requiredFields = currentStepEl.querySelectorAll('input[required], select[required], textarea[required]');
+    let isValid = true;
+
+    requiredFields.forEach(field => {
+        if (!field.value || !field.value.trim()) {
+            isValid = false;
+            field.classList.add('border-red-500');
+        } else {
+            field.classList.remove('border-red-500');
+        }
+    });
+    return isValid;
+}
+
+nextBtn.addEventListener('click', () => {
+    if (!validateStep(currentStep)) {
+        alert('현재 단계의 필수 항목을 입력해주세요.');
+        return;
+    }
+    if (currentStep < totalSteps) { currentStep++; updateUI(); }
+});
+prevBtn.addEventListener('click', () => { if (currentStep > 1) { currentStep--; updateUI(); } });
+
+/* ============================ 제출 처리 ============================ */
+form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    let missingFields = [];
+    for (let i = 1; i <= totalSteps; i++) {
+        if (!validateStep(i)) missingFields.push(i);
+    }
+
+    if (missingFields.length > 0) {
+        const proceed = confirm(`아직 작성되지 않은 필수 항목이 있습니다 (미작성: ${missingFields.join(', ')}단계).\n이대로 제출하시겠습니까?`);
+        if (!proceed) {
+            currentStep = missingFields[0];
+            updateUI();
+            return;
+        }
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> 파일 생성 및 전송 중...`;
+
+    try {
+        const files = buildFiles();
+
+        // 1) 첨부 발송 시도
+        let result = await sendWithAttachments(files);
+
+        if (result.ok) {
+            alert(`🎉 사전설문 제출 완료!\n\n아래 두 파일이 ${ADMIN_EMAIL} 으로 첨부 발송되었습니다.\n• ${files.xlsxName}\n• ${files.txtName}\n\n담당자가 확인 후 즉시 연락드리겠습니다.`);
+            form.reset();
+            calculateShares();
+            previewBox.classList.add('hidden');
+            window.goToStep(1);
+            return;
+        }
+
+        // 2) 실패 시 Formspree 본문 발송 + 파일은 사용자 PC에 저장
+        const fallback = await sendViaFormspree(files);
+        if (fallback.ok) {
+            saveFilesLocally(files);
+            alert(`✅ 설문 내용이 ${ADMIN_EMAIL} 으로 전송되었습니다.\n\n※ 첨부 방식 전송이 되지 않아(사유: ${result.reason}) 메일 본문으로 발송했습니다.\n엑셀·텍스트 파일은 이 기기에 저장되었으니, 필요하시면 회신 메일에 첨부해 주세요.`);
+            form.reset();
+            calculateShares();
+            previewBox.classList.add('hidden');
+            window.goToStep(1);
+        } else {
+            saveFilesLocally(files);
+            alert(`⚠️ 메일 전송에 실패했습니다.\n사유: ${fallback.reason}\n\n엑셀·텍스트 파일은 이 기기에 저장했습니다.\n${ADMIN_EMAIL} 으로 파일을 보내주시거나 사무소로 연락해 주세요.`);
+        }
+    } catch (err) {
+        console.error(err);
+        alert('⚠️ 파일 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> 엑셀·텍스트 파일 메일로 전송하기`;
+    }
+});
+
+updateUI();
+</script>
+</body>
+</html>
